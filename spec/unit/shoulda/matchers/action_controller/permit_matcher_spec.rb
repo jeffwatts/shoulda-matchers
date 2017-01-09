@@ -498,7 +498,10 @@ describe Shoulda::Matchers::ActionController::PermitMatcher, type: :controller d
 
         matcher.matches?(controller)
 
-        expect(context).to have_received(:post).with(:create, {})
+        expect(context).to have_received(:post).with(
+          :create,
+          build_expected_params({}),
+        )
       end
     end
 
@@ -511,7 +514,10 @@ describe Shoulda::Matchers::ActionController::PermitMatcher, type: :controller d
 
           matcher.matches?(controller)
 
-          expect(context).to have_received(:patch).with(:update, {})
+          expect(context).to have_received(:patch).with(
+            :update,
+            build_expected_params({}),
+          )
         end
       else
         it 'PUTs to the controller' do
@@ -521,7 +527,10 @@ describe Shoulda::Matchers::ActionController::PermitMatcher, type: :controller d
 
           matcher.matches?(controller)
 
-          expect(context).to have_received(:put).with(:update, {})
+          expect(context).to have_received(:put).with(
+            :update,
+            build_expected_params({}),
+          )
         end
       end
     end
@@ -536,7 +545,10 @@ describe Shoulda::Matchers::ActionController::PermitMatcher, type: :controller d
 
         matcher.matches?(controller)
 
-        expect(context).to have_received(:delete).with(:hide, {})
+        expect(context).to have_received(:delete).with(
+          :hide,
+          build_expected_params({}),
+        )
       end
     end
   end
@@ -597,5 +609,13 @@ describe Shoulda::Matchers::ActionController::PermitMatcher, type: :controller d
 
   def build_context
     double('context', post: nil, put: nil, patch: nil, delete: nil)
+  end
+
+  def build_expected_params(params)
+    if active_model_gte_5?
+      { params: params }
+    else
+      params
+    end
   end
 end

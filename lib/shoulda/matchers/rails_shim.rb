@@ -1,7 +1,7 @@
 module Shoulda
   module Matchers
     # @private
-    class RailsShim
+    module RailsShim
       def self.verb_for_update
         if action_pack_gte_4_1?
           :patch
@@ -43,23 +43,52 @@ module Shoulda
         simply_generate_validation_message(attribute, type, model_name, options)
       end
 
-      def self.simply_generate_validation_message(attribute, type, model_name, options)
-        default_translation_keys = [
-          :"activerecord.errors.models.#{model_name}.#{type}",
-          :"activerecord.errors.messages.#{type}",
-          :"errors.attributes.#{attribute}.#{type}",
-          :"errors.messages.#{type}"
-        ]
-        primary_translation_key = :"activerecord.errors.models.#{model_name}.attributes.#{attribute}.#{type}"
-        translate_options = { default: default_translation_keys }.merge(options)
-        I18n.translate(primary_translation_key, translate_options)
-      end
-
       def self.tables_and_views(connection)
         if active_record_major_version >= 5
           connection.data_sources
         else
           connection.tables
+        end
+      end
+
+      def self.make_controller_request(controller, verb, action, params: {})
+        controller.send(
+          verb,
+          action,
+          *build_controller_request_extra_args(controller, params: params),
+        )
+      end
+
+      private
+
+      def self.simply_generate_validation_message(attribute, type, model_name, options)
+        default_translation_keys = [
+          :"activerecord.errors.models.#{model_name}.#{type}",
+          :"activerecord.errors.messages.#{type}",
+          :"errors.attributes.#{attribute}.#{type}",
+          :"errors.messages.#{type}",
+        ]
+
+        primary_translation_key = [
+          'activerecord.errors.models',
+          model_name,
+          'attributes',
+          attribute,
+          type,
+        ].join('.').to_sym
+
+        translate_options = {
+          default: default_translation_keys,
+        }.merge(options)
+
+        I18n.translate(primary_translation_key, translate_options)
+      end
+
+      def self.build_controller_request_extra_args(controller, params:)
+        if active_record_major_version >= 5
+          [{ params: params }]
+        else
+          [params]
         end
       end
 
